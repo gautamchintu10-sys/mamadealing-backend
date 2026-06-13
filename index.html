@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <title>Mama Dealing | Buy, Sell & Rent Properties in India</title>
+    <meta name="description" content="Mama Dealing is India's premium search network. Find verified direct owner properties, residential flats, plots, and commercial spaces.">
+    <meta name="theme-color" content="#0b1329">
+    <link rel="icon" type="image/png" href="logo-light.png">
+
+    <!-- External Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            navy: '#0b1329',
+                            gold: '#f59e0b',
+                            'gold-hover': '#d97706',
+                            'dark-blue': '#0a1128',
+                            'dark-component': '#131e3a',
+                            'dark-border': '#1e2d54'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Premium Manrope Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+    <style>
+        :root {
+            --brand-navy: #0b1329;
+            --brand-gold: #f59e0b;
+            --brand-gold-hover: #d97706;
+        }
+
+        /* Scaled up the overall zoom to 100% to boost the entire layout size by 3-4% */
+        body {
+            font-family: 'Manrope', sans-serif;
+            zoom: 100%; 
+            padding-bottom: 72px; 
+            letter-spacing: -0.015em;
+        }
+        @media (min-width: 768px) {
+            body { padding-bottom: 0px; }
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Gold Outlined Property Cards in Light & Dark mode */
+        .p-card { 
+            border: 1.5px solid var(--brand-gold) !important;
+            border-radius: 20px;
+            background-color: #ffffff;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .dark .p-card {
+            border: 1.5px solid var(--brand-gold) !important;
+            background-color: #131e3a; /* Deep Navy/Blue component background */
+        }
+        .p-card:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 12px 24px -10px rgba(245, 158, 11, 0.2);
+        }
+        .dark .p-card:hover {
+            box-shadow: 0 12px 24px -10px rgba(245, 158, 11, 0.3) !important;
+        }
+        
+        .bg-brand-navy { background-color: var(--brand-navy); }
+        .text-brand-gold { color: var(--brand-gold); }
+        .bg-brand-gold { background-color: var(--brand-gold); }
+        .hover\:bg-brand-gold-hover:hover { background-color: var(--brand-gold-hover); }
+        .border-brand-gold { border-color: var(--brand-gold); }
+
+        .custom-search-tab.active {
+            border-color: var(--brand-gold) !important;
+            color: var(--brand-gold) !important;
+            font-weight: 700 !important;
+        }
+
+        /* Reels Immersive Pure Full-Frame View */
+        .reels-container-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            height: 100%;
+            width: 100%;
+            background-color: #050b18; /* Deep Blue background */
+        }
+        .single-reel-block {
+            scroll-snap-align: start;
+            position: relative;
+            width: 100%;
+            max-width: 480px; /* Centered immersive frame */
+            height: 100%;
+            min-height: calc(100vh - 56px);
+            background-color: #0c0c0c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border-left: 1px solid #1e2d54;
+            border-right: 1px solid #1e2d54;
+        }
+        @media (max-width: 768px) {
+            .single-reel-block {
+                max-width: 100% !important; /* Mobile edge-to-edge pure frame view */
+                border-left: none;
+                border-right: none;
+            }
+        }
+        .single-reel-block video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .step-div input, .step-div select {
+            width: 100%;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #0f172a;
+            outline: none;
+        }
+        .dark .step-div input, .dark .step-div select {
+            background-color: #131e3a;
+            border-color: #1e2d54;
+            color: #f1f5f9;
+        }
+
+        .seg-btn {
+            background-color: #f1f5f9;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            text-align: center;
+            text-transform: uppercase;
+            color: #0f172a;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        .dark .seg-btn {
+            background-color: #131e3a;
+            color: #cbd5e1;
+        }
+        input[type="radio"]:checked + .seg-btn {
+            background-color: #fef3c7;
+            color: #b45309;
+            border: 1px solid #f59e0b;
+        }
+        .dark input[type="radio"]:checked + .seg-btn {
+            background-color: #78350f;
+            color: #fef3c7;
+            border: 1px solid #f59e0b;
+        }
+
+        #simpleDistrictListTray::-webkit-scrollbar {
+            width: 4px;
+        }
+        #simpleDistrictListTray::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .dark #simpleDistrictListTray::-webkit-scrollbar-track {
+            background: #131e3a;
+        }
+        #simpleDistrictListTray::-webkit-scrollbar-thumb {
+            background: var(--brand-gold);
+            border-radius: 10px;
+        }
+
+        /* ----------------------------------------------------------------- */
+        /* GLOBAL PAGES AND MAIN SCROLL CONTAINERS GOLDEN SCROLLBAR           */
+        /* ----------------------------------------------------------------- */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+            display: block !important;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9 !important;
+        }
+        .dark ::-webkit-scrollbar-track, .dark::-webkit-scrollbar-track {
+            background: #0a1128 !important;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--brand-gold) !important;
+            border-radius: 10px !important;
+            border: 1px solid transparent !important;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--brand-gold-hover) !important;
+        }
+
+        /* Firefox Scrollbar engine support */
+        * {
+            scrollbar-width: thin !important;
+            scrollbar-color: var(--brand-gold) #0a1128 !important;
+        }
+
+        /* Force scroll bar visibility on mobile webkit engines */
+        .overflow-y-auto {
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* ----------------------------------------------------------------- */
+        /* MODAL AND NESTED SCROLL COMPONENT OVERRIDES (GOLD SLIDER FIXED)    */
+        /* ----------------------------------------------------------------- */
+        #propertyDetailsModal .overflow-y-auto::-webkit-scrollbar,
+        .overflow-y-auto::-webkit-scrollbar {
+            width: 6px !important;
+            height: 6px !important;
+            display: block !important;
+        }
+        #propertyDetailsModal .overflow-y-auto::-webkit-scrollbar-track,
+        .overflow-y-auto::-webkit-scrollbar-track {
+            background: #f1f5f9 !important;
+        }
+        .dark #propertyDetailsModal .overflow-y-auto::-webkit-scrollbar-track,
+        .dark .overflow-y-auto::-webkit-scrollbar-track {
+            background: #0a1128 !important;
+        }
+        #propertyDetailsModal .overflow-y-auto::-webkit-scrollbar-thumb,
+        .overflow-y-auto::-webkit-scrollbar-thumb {
+            background: var(--brand-gold) !important;
+            border-radius: 10px !important;
+        }
+
+        /* ----------------------------------------------------------------- */
+        /* PROPERTY DETAILS MODAL GOLDEN GLOW OUTLINE FOR DARK MODE          */
+        /* ----------------------------------------------------------------- */
+        .dark #propertyDetailsModal > div {
+            border: 2px solid var(--brand-gold) !important;
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.45) !important;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-[#0a1128] dark:text-slate-100 transition-colors duration-200">
+
+    <!-- Mobile Bottom Navigation (Scaled Down & Highly Compact) -->
+    <div class="mobile-nav fixed bottom-0 left-0 right-0 h-[56px] bg-white dark:bg-[#0b1329] border-t border-slate-200 dark:border-slate-800 z-[99999] flex justify-around items-center shadow-[0_-4px_20px_rgba(0,0,0,0.05)] px-1 md:hidden transition-colors duration-200">
+        <div onclick="switchTab('properties')" id="m-tab-props" class="flex flex-col items-center gap-0.5 cursor-pointer text-slate-900 dark:text-slate-100 w-11">
+            <i class="ph-fill ph-compass text-base text-brand-gold"></i><span class="text-[8px] font-bold tracking-wider uppercase">Explore</span>
+        </div>
+        <div onclick="switchTab('reels')" id="m-tab-reels" class="flex flex-col items-center gap-0.5 cursor-pointer text-slate-400 w-11">
+            <i class="ph-fill ph-play-circle text-base"></i><span class="text-[8px] font-bold tracking-wider uppercase">Reels</span>
+        </div>
+        <div onclick="triggerDirectPostFlow()" class="relative -top-2 bg-gradient-to-tr from-slate-900 to-slate-800 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-md border-2 border-white dark:border-slate-900 z-[100000] active:scale-95 transition-transform">
+            <i class="ph-bold ph-plus text-base text-brand-gold"></i>
+        </div>
+        <div onclick="switchTab('profile'); switchProfileTab('chats');" id="m-tab-services" class="flex flex-col items-center gap-0.5 cursor-pointer text-slate-400 w-11">
+            <i class="ph-fill ph-chats-teardrop text-base"></i><span class="text-[8px] font-bold tracking-wider uppercase">Chat</span>
+        </div>
+        <div onclick="switchTab('profile'); switchProfileTab('listings');" id="m-tab-profile" class="flex flex-col items-center gap-0.5 cursor-pointer text-slate-400 w-11">
+            <i class="ph-fill ph-user text-base"></i><span class="text-[8px] font-bold tracking-wider uppercase">Profile</span>
+        </div>
+    </div>
+
+    <!-- Desktop Sidebar (Modern Adaptable Colors & Enlarged Logo) -->
+    <aside class="sidebar hidden md:flex fixed left-0 top-0 bottom-0 w-20 bg-white dark:bg-[#0b1329] text-slate-700 dark:text-slate-300 flex-col items-center py-6 z-50 border-r border-slate-100 dark:border-slate-800 transition-colors duration-200">
+        <!-- Enlarged logo inside desktop sidebar -->
+        <div onclick="switchTab('properties')" class="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-center cursor-pointer mb-10 shadow-sm overflow-hidden p-1">
+            <img src="logo-light.png" alt="Logo" class="w-full h-full object-contain block dark:hidden">
+            <img src="logo-dark.png" alt="Logo" class="w-full h-full object-contain hidden dark:block">
+        </div>
+        <div class="w-full flex-1 space-y-8 flex flex-col items-center">
+            <div onclick="switchTab('properties')" id="d-tab-props" class="flex flex-col items-center gap-1.5 cursor-pointer text-brand-gold">
+                <i class="ph-fill ph-compass text-xl"></i><span class="text-[9px] font-bold uppercase tracking-wider">Browse</span>
+            </div>
+            <div onclick="switchTab('reels')" id="d-tab-reels" class="flex flex-col items-center gap-1.5 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-100">
+                <i class="ph-fill ph-play-circle text-xl"></i><span class="text-[9px] font-bold uppercase tracking-wider">Reels</span>
+            </div>
+            <div onclick="switchTab('services')" id="d-tab-services" class="flex flex-col items-center gap-1.5 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-100">
+                <i class="ph-fill ph-file-text text-xl"></i><span class="text-[9px] font-bold uppercase tracking-wider">Services</span>
+            </div>
+            <div onclick="triggerDirectPostFlow()" class="flex flex-col items-center gap-1.5 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-100">
+                <i class="ph-bold ph-plus-circle text-xl text-brand-gold"></i><span class="text-[9px] font-bold uppercase tracking-wider">Post Ad</span>
+            </div>
+        </div>
+        <div onclick="switchTab('profile')" id="d-tab-profile" class="flex flex-col items-center gap-1.5 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-100 mt-auto">
+            <i class="ph-fill ph-user-circle text-2xl"></i><span class="text-[9px] font-bold uppercase tracking-wider">Profile</span>
+        </div>
+    </aside>
+
+    <div class="w-full md:pl-20">
+        <!-- Slimmer Top Navbar -->
+        <nav id="top-navbar-node" class="bg-white dark:bg-[#0b1329] sticky top-0 z-[1000] border-b border-slate-100 dark:border-slate-800 px-3 sm:px-6 py-1 sm:py-1.5 transition-colors duration-200">
+            <div class="max-w-7xl mx-auto flex justify-between items-center gap-2">
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <div class="flex items-center gap-1.5 cursor-pointer" onclick="switchTab('properties')">
+                        <!-- Light Mode Logo -->
+                        <img src="logo-light.png" alt="Logo Light" class="block dark:hidden w-17 h-17 sm:w-25 sm:h-20 object-contain shrink-0">
+                        <!-- Dark Mode Logo -->
+                        <img src="logo-dark.png" alt="Logo Dark" class="hidden dark:block w-17 h-17 sm:w-25 sm:h-20 object-contain shrink-0">
+                    </div>
+                    <button onclick="openGlobalLocationModal()" class="bg-slate-50 dark:bg-[#131e3a] hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 px-2 sm:px-3 py-1 rounded-full flex items-center gap-1 text-[10px] sm:text-xs font-bold truncate max-w-[90px] sm:max-w-xs shrink-0 h-7 sm:h-8 border border-slate-200 dark:border-slate-800 transition-colors">
+                        <i class="ph-fill ph-map-pin text-brand-gold text-xs"></i>
+                        <span id="selectedGlobalCityLabel">All India</span>
+                        <i class="ph-bold ph-caret-down text-[8px] text-slate-400"></i>
+                    </button>
+                </div>
+                
+                <div class="flex items-center gap-1 sm:gap-2">
+                    <!-- Theme Switcher -->
+                    <button id="themeToggleBtn" onclick="toggleTheme()" class="bg-slate-50 dark:bg-[#131e3a] hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 w-7 h-7 sm:h-8 sm:w-8 md:h-9 md:w-9 rounded-lg md:rounded-xl flex items-center justify-center border border-slate-200 dark:border-slate-800 transition-all shrink-0">
+                        <i id="themeToggleIcon" class="ph-bold ph-moon text-xs sm:text-sm text-brand-gold"></i>
+                    </button>
+
+                    <button onclick="switchTab('services')" class="md:hidden bg-slate-50 dark:bg-[#131e3a] hover:bg-slate-100 text-slate-800 dark:text-slate-200 px-2 h-7 rounded-md font-bold text-[9px] uppercase tracking-wider flex items-center justify-center gap-1 shrink-0 border border-slate-200 dark:border-slate-800">
+                        <i class="ph-bold ph-briefcase text-brand-gold text-xs"></i><span>Service</span>
+                    </button>
+                    <!-- VIP Button (Glowing Outer Golden on Mobile) -->
+                    <button onclick="openFeature('vipServicesInfoModal')" class="bg-brand-gold hover:bg-brand-gold-hover text-slate-955 px-2.5 sm:px-3 h-7 sm:h-8 md:h-9 rounded-md md:rounded-lg font-extrabold text-[9px] sm:text-[10px] uppercase tracking-wider flex items-center justify-center gap-0.5 shrink-0 transition-all border border-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.85)] animate-pulse">
+                        <i class="ph-fill ph-handshake text-xs"></i><span>VIP</span>
+                    </button>
+                    <!-- Plans Button (Glowing Outer Golden on Mobile) -->
+                    <button onclick="openFeature('platformSubscriptionPlansModal')" class="bg-slate-50 dark:bg-[#131e3a] hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-805 dark:text-slate-200 px-2 sm:px-3 h-7 sm:h-8 md:h-9 rounded-md md:rounded-lg font-bold text-[9px] sm:text-[10px] uppercase tracking-wider shrink-0 border border-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.5)] flex items-center justify-center gap-0.5">
+                        <i class="ph-fill ph-crown text-brand-gold text-xs"></i><span>Plans</span>
+                    </button>
+                    <button onclick="triggerDirectPostFlow()" class="hidden md:flex bg-slate-900 hover:bg-slate-800 dark:bg-brand-gold dark:hover:bg-brand-gold-hover text-white dark:text-slate-955 px-3.5 h-9 rounded-lg font-bold text-xs uppercase tracking-wider items-center justify-center gap-1 shrink-0 border-0 shadow-sm transition-all">
+                        <i class="ph-bold ph-plus-circle text-sm"></i><span>Post Ad</span>
+                    </button>
+                    
+                    <!-- Login Button -->
+                    <div id="authDynamicComponent" class="hidden md:block shrink-0">
+                        <button onclick="openFeature('loginModal')" class="bg-white hover:bg-slate-100 text-slate-955 dark:bg-white dark:text-slate-950 px-3.5 h-9 rounded-lg font-bold text-xs uppercase tracking-wider flex items-center justify-center border border-slate-200 dark:border-transparent shadow-sm">Login</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Properties View -->
+        <div id="main-properties-view">
+            <!-- Hero Banner -->
+            <div class="relative bg-[#050b18] text-white py-10 md:py-16 px-4 md:px-8 overflow-hidden border-b border-slate-200 dark:border-slate-900" style="background-image: url('banner.jpg'); background-size: cover; background-position: center;">
+                <div class="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/80 to-transparent pointer-events-none"></div>
+                <div class="relative max-w-7xl mx-auto z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                    
+                    <div class="lg:col-span-8 space-y-4 md:space-y-6 text-left">
+                        
+                        <div class="flex justify-center lg:justify-start">
+                            <span class="bg-brand-gold text-slate-955 text-[9px] sm:text-[10px] font-extrabold uppercase px-3.5 py-1 rounded-full tracking-wider shadow-md text-center">
+                                🔥 Zero Brokerage Direct Landlord Network
+                            </span>
+                        </div>
+
+                        <div class="space-y-2">
+                            <h2 class="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight uppercase leading-tight text-white">Find Your Next <br class="hidden sm:inline"> <span class="text-brand-gold">Perfect Property</span></h2>
+                            <p class="text-[10px] sm:text-xs font-semibold text-slate-300 max-w-lg">Explore verified properties, plots and flats across India without middleman charges.</p>
+                        </div>
+
+                        <div class="space-y-3 pt-1 text-slate-800 max-w-2xl">
+                            <!-- Option Tabs & Post Button in 2 Lines on Mobile -->
+                            <div class="flex justify-start border-b border-white/10 pb-1.5 items-center gap-3">
+                                <div class="flex gap-3 overflow-x-auto no-scrollbar py-0.5 items-center w-full justify-between">
+                                    <div class="flex gap-2.5 sm:gap-3 shrink-0">
+                                        <button id="tabBuyAsset" class="custom-search-tab active border-b-2 border-brand-gold pb-1.5 text-[10px] sm:text-xs font-bold uppercase text-white transition-all shrink-0" onclick="applySearchPillTab('Buy', this)">Buy Asset</button>
+                                        <button id="tabRentPG" class="custom-search-tab border-b-2 border-transparent pb-1.5 text-[10px] sm:text-xs font-bold uppercase text-slate-400 hover:text-white transition-all shrink-0" onclick="applySearchPillTab('Rent', this)">Rent / PG</button>
+                                        <button id="tabPlots" class="custom-search-tab border-b-2 border-transparent pb-1.5 text-[10px] sm:text-xs font-bold uppercase text-slate-400 hover:text-white transition-all shrink-0" onclick="applySearchPillType('Plot', this)">Plots Only</button>
+                                        <button id="tabCommercial" class="custom-search-tab border-b-2 border-transparent pb-1.5 text-[10px] sm:text-xs font-bold uppercase text-slate-400 hover:text-white transition-all shrink-0" onclick="applySearchPillType('Commercial', this)">Commercials</button>
+                                        <button id="tabNewLaunchProjects" class="custom-search-tab border-b-2 border-transparent pb-1.5 text-[10px] sm:text-xs font-bold uppercase text-slate-400 hover:text-white transition-all shrink-0" onclick="applySearchPillType('Upcoming Project', this)">New Projects</button>
+                                    </div>
+                                    
+                                    <!-- Golden Glowing "Post Free Property" Button (Compact & 2-Line Layout in Mobile) -->
+                                    <button onclick="triggerDirectPostFlow()" class="bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg tracking-wider shrink-0 shadow-[0_0_12px_rgba(245,158,11,0.65)] transition-all animate-pulse">
+                                        <span class="block text-[8px] sm:text-[10px] font-extrabold uppercase leading-tight text-center">Post Free<br>Property</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Integrated Search Input Card (Optimized & Highly Compact for Mobile) -->
+                            <div class="flex flex-col items-center bg-white dark:bg-[#131e3a] rounded-xl sm:rounded-full p-1 sm:p-1.5 w-full shadow-xl border border-slate-200/50 dark:border-slate-800 gap-1 md:gap-1.5 md:flex-row text-slate-900 dark:text-slate-100 transition-colors">
+                                <div class="flex items-center flex-1 px-2.5 py-1 sm:py-0 w-full">
+                                    <i class="ph-fill ph-map-pin text-brand-gold text-sm sm:text-base mr-1.5 sm:mr-2"></i>
+                                    <input type="text" id="searchInput" oninput="render()" placeholder="Enter Locality, Colony or City..." class="w-full bg-transparent outline-none font-bold text-[10px] sm:text-xs text-slate-900 dark:text-white placeholder-slate-400">
+                                </div>
+                                <div class="hidden md:block w-[1px] h-6 bg-slate-200 dark:bg-slate-700"></div>
+                                <div class="flex items-center px-2.5 py-1 sm:py-0 w-full md:w-auto shrink-0 border-t border-slate-100 dark:border-slate-800 md:border-t-0">
+                                    <i class="ph-fill ph-house text-slate-400 text-xs sm:text-sm mr-1 sm:mr-1.5"></i>
+                                    <select id="filterType" onchange="render()" class="bg-transparent font-bold text-[10px] sm:text-xs text-slate-808 dark:text-slate-200 outline-none pr-3 cursor-pointer w-full md:w-auto py-0.5">
+                                        <option value="All" class="dark:bg-[#131e3a] dark:text-white">All Types</option>
+                                        <option value="Flat" class="dark:bg-[#131e3a] dark:text-white">Apartment / Flat</option>
+                                        <option value="House" class="dark:bg-[#131e3a] dark:text-white">Independent House</option>
+                                        <option value="Commercial" class="dark:bg-[#131e3a] dark:text-white">Commercial</option>
+                                    </select>
+                                </div>
+                                <button onclick="render()" class="w-full md:w-auto bg-brand-gold hover:bg-brand-gold-hover text-slate-950 font-extrabold text-[9px] sm:text-[10px] uppercase px-4 py-2 sm:py-2.5 sm:px-6 rounded-lg sm:rounded-full tracking-wider flex items-center justify-center gap-1 transition-all mt-1 md:mt-0">
+                                    <i class="ph-bold ph-magnifying-glass text-xs"></i> Search
+                                </button>
+                            </div>
+
+                            <!-- Budget Slider & Near Me Layout (More Compact in Mobile) -->
+                            <div class="flex flex-col gap-2 pt-0.5">
+                                <div class="w-full flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-3 bg-white dark:bg-slate-900 p-2 md:p-3 rounded-lg md:rounded-xl border border-slate-200 dark:border-slate-800 transition-colors">
+                                    <p class="text-[9px] md:text-[10px] font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider shrink-0 flex items-center gap-0.5">
+                                        <i class="ph-fill ph-currency-inr text-brand-gold"></i> Max Budget: 
+                                        <span class="text-brand-gold font-bold ml-1 text-[10px] sm:text-xs" id="priceDisplay">Any Price</span>
+                                    </p>
+                                    <input type="range" id="priceFilter" min="0" max="50000000" step="500000" value="50000000" oninput="updatePriceFilter(this.value)" class="w-full h-1 bg-slate-300 dark:bg-slate-600 rounded-lg appearance-none accent-amber-500 cursor-pointer">
+                                </div>
+
+                                <div class="flex flex-wrap items-center justify-between gap-1.5 pt-0.5">
+                                    <div class="flex gap-1 flex-wrap">
+                                        <button onclick="applyQuickBudgetFilter(0, 2000000, this)" class="quick-b-btn text-[8px] sm:text-[9px] font-bold px-2 py-0.5 rounded-md text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all border border-slate-200 dark:border-slate-800 shadow-sm">&lt; 20 Lakhs</button>
+                                        <button onclick="applyQuickBudgetFilter(2000000, 5000000, this)" class="quick-b-btn text-[8px] sm:text-[9px] font-bold px-2 py-0.5 rounded-md text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all border border-slate-200 dark:border-slate-800 shadow-sm">20L - 50 Lakhs</button>
+                                        <button onclick="applyQuickBudgetFilter(5000000, 10000000, this)" class="quick-b-btn text-[8px] sm:text-[9px] font-bold px-2 py-0.5 rounded-md text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all border border-slate-200 dark:border-slate-800 shadow-sm">50L - 1 Cr</button>
+                                        <button onclick="resetAllFilters()" class="text-[8px] sm:text-[9px] bg-red-600 hover:bg-red-750 text-white px-2 py-0.5 rounded-md font-bold transition-all shadow-sm">Reset</button>
+                                    </div>
+
+                                    <div class="flex items-center bg-white dark:bg-slate-900 p-0.5 rounded-md gap-1 border border-slate-200 dark:border-slate-800 shadow-sm">
+                                        <button id="nearMeTriggerBtn" onclick="triggerNearMeLocationEngine()" class="bg-brand-gold hover:bg-brand-gold-hover text-slate-950 font-bold text-[8px] sm:text-[9px] uppercase py-1 px-2 rounded flex items-center gap-0.5 transition-all shrink-0">
+                                            <i class="ph-bold ph-crosshair text-xs"></i> Near Me
+                                        </button>
+                                        <select id="nearMeRadius" onchange="triggerNearMeLocationEngine()" class="bg-white text-slate-900 dark:bg-slate-800 dark:text-white font-semibold text-[8px] sm:text-[10px] p-1 rounded border border-slate-300 dark:border-slate-700 outline-none cursor-pointer">
+                                            <option value="5">5 km</option>
+                                            <option value="10" selected>10 km</option>
+                                            <option value="20">20 km</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Verified Inventory Section -->
+            <main id="inventory-section" class="max-w-7xl mx-auto px-4 md:px-6 py-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xs sm:text-sm font-extrabold italic text-slate-900 dark:text-slate-100 uppercase tracking-wider">Verified Inventory Network</h2>
+                    <span class="text-[10px] sm:text-xs font-semibold text-slate-400" id="inventoryCounter">Loading...</span>
+                </div>
+                <div id="propertyGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"></div>
+                <div id="propertyPagination" class="flex justify-center items-center gap-1.5 mt-8"></div>
+            </main>
+        </div>
+
+        <!-- Reels View Layout -->
+        <div id="main-reels-view" class="hidden h-[calc(100vh-56px)] bg-[#050b18] flex flex-col relative overflow-hidden">
+            <button id="reelSearchTriggerBtnFloating" onclick="toggleReelSearchHeader(true)" class="absolute top-4 right-4 z-40 bg-brand-gold text-slate-955 w-10 h-10 rounded-full flex items-center justify-center shadow-lg hover:bg-brand-gold-hover hidden">
+                <i class="ph-bold ph-magnifying-glass text-lg"></i>
+            </button>
+            <div id="reelHeaderActionEngine" class="absolute top-4 left-4 right-4 z-40 flex items-center gap-2 pointer-events-none">
+                <button onclick="switchTab('properties')" class="bg-slate-900/90 text-white p-3 rounded-full border border-white/10 text-xs font-bold flex items-center justify-center shadow-xl shrink-0 pointer-events-auto transition-all">
+                    <i class="ph-bold ph-arrow-left text-sm"></i>
+                </button>
+                <div id="reelSearchBarWrapper" class="flex items-center flex-1 bg-slate-900/90 border border-white/10 px-3.5 py-2 rounded-full shadow-xl backdrop-blur-md pointer-events-auto">
+                    <i class="ph ph-magnifying-glass text-slate-400 text-xs mr-2"></i>
+                    <input type="text" id="reelAreaSearchInput" oninput="handleReelSearchAndCollapse(this.value)" onkeydown="if(event.key === 'Enter') { toggleReelSearchHeader(false); }" placeholder="Search area..." class="w-full bg-transparent outline-none font-semibold text-xs text-white">
+                </div>
+                <button id="reelSearchDoneBtn" onclick="toggleReelSearchHeader(false)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-full text-[10px] font-bold uppercase shrink-0 pointer-events-auto transition-all shadow-xl">Done</button>
+            </div>
+
+            <div id="reelScrollContainer" tabindex="0" class="reels-container-wrapper no-scrollbar mt-0 outline-none"></div>
+        </div>
+
+        <!-- Services View -->
+        <div id="main-services-view" class="hidden max-w-5xl mx-auto px-4 md:px-6 py-6 space-y-6">
+            <div class="flex justify-between items-center">
+                <!-- Back to Explore Button -->
+                <button onclick="switchTab('properties')" class="bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3.5 py-2 rounded-xl text-[10px] font-bold uppercase flex items-center gap-1.5 transition-colors border border-slate-300 dark:border-slate-700 shadow-sm hover:bg-slate-300 dark:hover:bg-slate-700">
+                    <i class="ph-bold ph-arrow-left"></i> Back to Explore
+                </button>
+            </div>
+
+            <div class="bg-white dark:bg-[#131e3a] rounded-2xl p-4 md:p-6 border border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-colors">
+                <div>
+                    <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5"><i class="ph-fill ph-briefcase text-brand-gold"></i> Premium Services Directory</h2>
+                    <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">Select a business domain to register or find verified professional partners.</p>
+                </div>
+                <button onclick="openFeature('addB2bModal')" class="bg-brand-gold hover:bg-brand-gold-hover text-slate-955 font-bold text-[10px] uppercase px-5 py-3 rounded-lg shadow-sm tracking-wider flex items-center justify-center gap-1 transition-all"><i class="ph-bold ph-plus-circle"></i> Join Directory</button>
+            </div>
+
+            <!-- Services Category Selection View -->
+            <div id="b2bCategorySelectionView" class="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                <div onclick="selectB2bCategoryCard('Legal')" class="bg-white dark:bg-[#131e3a] border border-slate-100 dark:border-slate-800 hover:border-brand-gold dark:hover:border-brand-gold p-4 sm:p-6 rounded-2xl cursor-pointer text-center space-y-3 hover:shadow-md transition-all group">
+                    <div class="w-11 h-11 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center text-xl mx-auto"><i class="ph-fill ph-scales"></i></div>
+                    <h3 class="font-extrabold text-[10px] text-slate-900 dark:text-slate-200 uppercase">Legal Experts</h3>
+                </div>
+                <div onclick="selectB2bCategoryCard('Interior')" class="bg-white dark:bg-[#131e3a] border border-slate-100 dark:border-slate-800 hover:border-brand-gold dark:hover:border-brand-gold p-4 sm:p-6 rounded-2xl cursor-pointer text-center space-y-3 hover:shadow-md transition-all group">
+                    <div class="w-11 h-11 bg-amber-50 dark:bg-amber-955/30 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center text-xl mx-auto"><i class="ph-fill ph-palette"></i></div>
+                    <h3 class="font-extrabold text-[10px] text-slate-900 dark:text-slate-200 uppercase">Interior Designers</h3>
+                </div>
+                <div onclick="selectB2bCategoryCard('Construction')" class="bg-white dark:bg-[#131e3a] border border-slate-100 dark:border-slate-800 hover:border-brand-gold dark:hover:border-brand-gold p-4 sm:p-6 rounded-2xl cursor-pointer text-center space-y-3 hover:shadow-md transition-all group">
+                    <div class="w-11 h-11 bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center text-xl mx-auto"><i class="ph-fill ph-buildings"></i></div>
+                    <h3 class="font-extrabold text-[10px] text-slate-900 dark:text-slate-200 uppercase">Civil Contractors</h3>
+                </div>
+                <div onclick="selectB2bCategoryCard('Suppliers')" class="bg-white dark:bg-[#131e3a] border border-slate-100 dark:border-slate-800 hover:border-brand-gold dark:hover:border-brand-gold p-4 sm:p-6 rounded-2xl cursor-pointer text-center space-y-3 hover:shadow-md transition-all group">
+                    <div class="w-11 h-11 bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center text-xl mx-auto"><i class="ph-fill ph-truck"></i></div>
+                    <h3 class="font-extrabold text-[10px] text-slate-900 dark:text-slate-200 uppercase">Material Suppliers</h3>
+                </div>
+                <div onclick="selectB2bCategoryCard('Movers')" class="bg-white dark:bg-[#131e3a] border border-slate-100 dark:border-slate-800 hover:border-brand-gold dark:hover:border-brand-gold p-4 sm:p-6 rounded-2xl cursor-pointer text-center space-y-3 hover:shadow-md transition-all group">
+                    <div class="w-11 h-11 bg-red-50 dark:bg-red-955/30 text-red-600 dark:text-red-400 rounded-xl flex items-center justify-center text-xl mx-auto"><i class="ph-fill ph-package"></i></div>
+                    <h3 class="font-extrabold text-[10px] text-slate-900 dark:text-slate-200 uppercase">Packers & Movers</h3>
+                </div>
+                <div onclick="selectB2bCategoryCard('Vaastu')" class="bg-white dark:bg-[#131e3a] border border-slate-100 dark:border-slate-800 hover:border-brand-gold dark:hover:border-brand-gold p-4 sm:p-6 rounded-2xl cursor-pointer text-center space-y-3 hover:shadow-md transition-all group">
+                    <div class="w-11 h-11 bg-yellow-50 dark:bg-yellow-955/30 text-yellow-600 dark:text-yellow-400 rounded-xl flex items-center justify-center text-xl mx-auto"><i class="ph-fill ph-compass"></i></div>
+                    <h3 class="font-extrabold text-[10px] text-slate-900 dark:text-slate-200 uppercase">Vaastu Experts</h3>
+                </div>
+            </div>
+
+            <!-- Services View with filter parameters and Back Navigation -->
+            <div id="b2bResultsListView" class="hidden space-y-5">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-[#131e3a] p-3 border dark:border-slate-800 rounded-2xl transition-colors">
+                    <button onclick="backToB2bCategories()" class="bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold text-[10px] uppercase px-4 py-2.5 rounded-lg flex items-center gap-1.5 transition-colors border dark:border-slate-700 shadow-sm">
+                        <i class="ph-bold ph-arrow-left"></i> Back
+                    </button>
+                    <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+                        <div class="w-full sm:w-auto">
+                            <select id="filterServiceState" onchange="loadB2bCitiesForFilter()" class="bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 p-2 rounded-lg font-semibold text-xs outline-none text-slate-900 dark:text-slate-200 min-w-[120px]"></select>
+                        </div>
+                        <div class="w-full sm:w-auto">
+                            <select id="filterServiceCity" onchange="renderB2bServicesHub()" class="bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 p-2 rounded-lg font-semibold text-xs outline-none text-slate-900 dark:text-slate-200 min-w-[120px]">
+                                <option value="All">Select District (All)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div id="b2bServicesGrid" class="space-y-3"></div>
+            </div>
+        </div>
+
+        <!-- Profile View Workspace -->
+        <div id="main-profile-view" class="hidden max-w-5xl mx-auto px-4 md:px-6 py-6 space-y-5">
+            
+            <!-- PROFILE MAIN DASHBOARD STATE -->
+            <div id="profileMainDashboardState" class="bg-white dark:bg-[#131e3a] rounded-3xl border border-slate-100 dark:border-slate-800 p-5 shadow-sm space-y-5 transition-colors">
+                <div class="flex flex-col sm:flex-row items-center gap-4 pb-5 border-b dark:border-slate-800">
+                    <div id="profileAvatarBadge" class="w-14 h-14 bg-gradient-to-tr from-slate-900 to-slate-850 text-brand-gold text-xl font-extrabold rounded-2xl flex items-center justify-center">G</div>
+                    <div class="text-center sm:text-left flex-1">
+                        <div class="flex flex-wrap items-center justify-center sm:justify-start gap-1.5">
+                            <h2 id="profileName" class="text-lg font-extrabold text-slate-900 dark:text-slate-100 uppercase">Guest Session</h2>
+                            <span id="profileVerificationBadgeSlot"></span>
+                        </div>
+                        <p id="profilePhone" class="text-slate-400 dark:text-slate-500 font-semibold text-xs mt-0.5">+91 Authentication Node</p>
+                    </div>
+                    <button onclick="logoutAgent()" class="text-[10px] font-bold text-red-500 bg-red-50 dark:bg-red-955/20 px-4 py-2 rounded-xl uppercase">Logout</button>
+                </div>
+
+                <!-- Profile Custom Navigation Buttons (Grid View) -->
+                <div id="profileButtonsMobileWrapper" class="flex flex-col gap-2 md:grid md:grid-cols-4 md:gap-3">
+                    <button id="p-btn-chats" onclick="switchProfileTab('chats')" class="flex items-center justify-between w-full p-3.5 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-slate-200 rounded-xl font-bold text-xs border border-slate-100 dark:border-slate-755 transition-all shadow-sm">
+                        <span class="flex items-center gap-2 uppercase tracking-wider text-[10px]"><i class="ph-fill ph-chats-teardrop text-emerald-500 text-base"></i> Chat logs</span>
+                        <i class="ph ph-caret-right text-slate-400"></i>
+                    </button>
+                    <button id="p-btn-listings" onclick="switchProfileTab('listings')" class="flex items-center justify-between w-full p-3.5 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-slate-200 rounded-xl font-bold text-xs border border-slate-100 dark:border-slate-755 transition-all shadow-sm">
+                        <span class="flex items-center gap-2 uppercase tracking-wider text-[10px]"><i class="ph-fill ph-house text-brand-gold text-base"></i> My Listings</span>
+                        <i class="ph ph-caret-right text-slate-400"></i>
+                    </button>
+                    <button id="p-btn-saved" onclick="switchProfileTab('saved')" class="flex items-center justify-between w-full p-3.5 bg-slate-50 dark:bg-slate-850/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-slate-200 rounded-xl font-bold text-xs border border-slate-100 dark:border-slate-755 transition-all shadow-sm">
+                        <span class="flex items-center gap-2 uppercase tracking-wider text-[10px]"><i class="ph-fill ph-bookmark text-amber-500 text-base"></i> Saved Units</span>
+                        <i class="ph ph-caret-right text-slate-400"></i>
+                    </button>
+                    <button id="p-btn-recent" onclick="switchProfileTab('recent')" class="flex items-center justify-between w-full p-3.5 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-slate-200 rounded-xl font-bold text-xs border border-slate-100 dark:border-slate-755 transition-all shadow-sm">
+                        <span class="flex items-center gap-2 uppercase tracking-wider text-[10px]"><i class="ph-fill ph-clock-counter-clockwise text-purple-500 text-base"></i> Recent Views</span>
+                        <i class="ph ph-caret-right text-slate-400"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- PROFILE SUB VIEWSTATE -->
+            <div id="profileSubPanelViewState" class="hidden bg-white dark:bg-[#131e3a] rounded-3xl border border-slate-100 dark:border-slate-800 p-5 shadow-sm space-y-5 transition-colors">
+                <!-- Sub-Page Back Button & Header -->
+                <div class="flex items-center gap-3 pb-3 border-b dark:border-slate-800">
+                    <button onclick="goBackToProfileDashboard()" class="bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-200 px-3 py-2 rounded-lg text-[10px] font-bold uppercase flex items-center gap-1.5 transition-colors">
+                        <i class="ph-bold ph-arrow-left"></i> Back
+                    </button>
+                    <h2 id="profileSubViewTitle" class="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">Sub-Page Title</h2>
+                </div>
+
+                <!-- Sub Panels Content -->
+                <div id="profilePanel-chats" class="profile-panel-sub hidden space-y-4">
+                    <h3 class="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5"><i class="ph-fill ph-chats-teardrop text-emerald-500"></i> My Active Chat Logs</h3>
+                    <div id="profileActiveChatsDashboardList" class="space-y-2"></div>
+                </div>
+                <div id="profilePanel-listings" class="profile-panel-sub hidden space-y-4">
+                    <h3 class="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5"><i class="ph-fill ph-house text-brand-gold"></i> My Listed Properties</h3>
+                    <div id="myPropertiesManagementContainer" class="space-y-2"></div>
+                </div>
+                <div id="profilePanel-saved" class="profile-panel-sub hidden space-y-4">
+                    <h3 class="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5"><i class="ph-fill ph-bookmark text-amber-500"></i> Saved Bookmarks</h3>
+                    <div id="savedPropertiesDashboardGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+                </div>
+                <div id="profilePanel-recent" class="profile-panel-sub hidden space-y-4">
+                    <h3 class="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5"><i class="ph-fill ph-clock-counter-clockwise text-purple-500"></i> Recently Viewed Units</h3>
+                    <div id="recentlyViewedContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Premium Dark Footer -->
+    <footer class="bg-[#050b18] text-[#7d8fa9] py-10 px-6 md:px-12 border-t border-slate-900 mt-12">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div class="space-y-3">
+                <h3 class="text-white text-base font-bold tracking-tight uppercase italic flex items-center gap-1.5">
+                    <img src="logo-light.png" alt="Logo" class="w-5 h-5 object-contain block dark:hidden">
+                    <img src="logo-dark.png" alt="Logo" class="w-5 h-5 object-contain hidden dark:block">
+                </h3>
+                <p class="text-[10px] leading-relaxed font-semibold text-slate-400">
+                    Mama Dealing is an integrated Real Estate search network connecting buyers, direct asset owners, and verified brokers across Bhopal, Madhya Pradesh.
+                </p>
+            </div>
+            <div class="space-y-3">
+                <h4 class="text-xs font-bold text-white uppercase tracking-wider">Properties in Bhopal</h4>
+                <ul class="space-y-1.5 text-[11px] font-semibold">
+                    <li><a href="#inventory-section" onclick="document.getElementById('searchInput').value='Ayodhya Bypass'; render();" class="hover:text-white transition-colors">Property in Ayodhya Bypass</a></li>
+                    <li><a href="#inventory-section" onclick="document.getElementById('searchInput').value='Kolar Road'; render();" class="hover:text-white transition-colors">Property in Kolar Road</a></li>
+                    <li><a href="#inventory-section" onclick="document.getElementById('searchInput').value='Arera Colony'; render();" class="hover:text-white transition-colors">Property in Arera Colony</a></li>
+                </ul>
+            </div>
+            <div class="space-y-3">
+                <h4 class="text-xs font-bold text-white uppercase tracking-wider">Property Services</h4>
+                <ul class="space-y-1.5 text-[11px] font-semibold">
+                    <li><a href="#" onclick="switchTab('services'); selectB2bCategoryCard('Legal');" class="hover:text-white transition-colors">Legal Consultants</a></li>
+                    <li><a href="#" onclick="switchTab('services'); selectB2bCategoryCard('Interior');" class="hover:text-white transition-colors">Interior Decorators</a></li>
+                    <li><a href="#" onclick="openFeature('addB2bModal')" class="text-amber-400 hover:text-amber-300 font-extrabold transition-colors">Join Directory</a></li>
+                </ul>
+            </div>
+            <div class="space-y-3">
+                <h4 class="text-xs font-bold text-white uppercase tracking-wider">Contact Us</h4>
+                <ul class="space-y-1.5 text-[11px] font-semibold text-slate-400">
+                    <li class="flex items-center gap-1 hover:text-white transition-all"><i class="ph-fill ph-envelope text-brand-gold"></i> support@mamadealing.com</li>
+                    <li class="flex items-center gap-1 hover:text-white transition-all"><i class="ph-fill ph-phone text-brand-gold"></i> +91 7000123456</li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto border-t border-slate-900 mt-8 pt-6 text-center text-[9px] font-semibold text-slate-500">
+            <p>© 2026 Mama Dealing Network. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Global Geography Picker Modal -->
+    <div id="simplifiedLocationModal" class="fixed inset-0 z-[600000] hidden items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/70 backdrop-blur-sm" onclick="closeFeature('simplifiedLocationModal')"></div>
+        <div class="relative bg-white dark:bg-[#131e3a] text-slate-900 dark:text-slate-100 w-full max-w-sm rounded-2xl p-5 shadow-2xl flex flex-col max-h-[75vh] border-2 border-transparent dark:border-brand-gold transition-colors duration-200">
+            <button onclick="closeFeature('simplifiedLocationModal')" class="absolute top-3 right-3 text-slate-400 hover:text-red-500 font-bold text-lg w-7 h-7 flex items-center justify-center bg-slate-50 dark:bg-slate-800 rounded-full z-50 transition-colors">&times;</button>
+            <div class="space-y-3 shrink-0 mb-2">
+                <h3 class="text-xs font-extrabold uppercase tracking-wider flex items-center gap-1 text-slate-900 dark:text-white"><i class="ph-bold ph-map-pin text-brand-gold"></i> Select Territory</h3>
+                <div>
+                    <select id="simpleStateDropdown" onchange="loadDistrictsForSimpleDropdown(this.value)" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-2.5 rounded-lg font-bold text-xs text-slate-900 dark:text-slate-100 outline-none"></select>
+                </div>
+                <div class="flex items-center bg-white dark:bg-slate-800 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700">
+                    <i class="ph ph-magnifying-glass text-slate-405 text-sm mr-2"></i>
+                    <input type="text" id="simpleDistrictSearchInput" oninput="filterSimpleDistrictsList(this.value)" placeholder="Search districts..." class="w-full bg-transparent outline-none font-bold text-xs text-slate-900 dark:text-white placeholder-slate-400">
+                </div>
+            </div>
+            <!-- District Scroll Wrapper Setup -->
+            <div id="simpleDistrictListTray" class="flex-1 overflow-y-auto max-h-[220px] divide-y divide-slate-100 dark:divide-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-[#131e3a]"></div>
+        </div>
+    </div>
+
+    <!-- OTP Login Modal -->
+    <div id="loginModal" class="fixed inset-0 z-[100000] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeFeature('loginModal')"></div>
+        <div class="relative w-full max-w-sm bg-white dark:bg-[#131e3a] text-slate-900 dark:text-slate-100 rounded-2xl p-5 shadow-2xl space-y-3 animate-slide-up transition-colors">
+            
+            <div id="authStep1" class="space-y-2.5 relative">
+                <button onclick="closeFeature('loginModal')" class="absolute -top-1 -right-1 text-slate-400 hover:text-red-500 font-bold text-xl w-7 h-7 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-full z-50 transition-colors">&times;</button>
+                <div class="text-center mb-3">
+                    <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Select Authentication Layer</h3>
+                </div>
+                <button onclick="selectRole('Owner')" class="flex items-center gap-3 border dark:border-slate-800 p-3 rounded-xl w-full text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                    <div class="w-9 h-9 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg flex items-center justify-center text-lg"><i class="ph-fill ph-house-line"></i></div>
+                    <div><p class="font-extrabold text-slate-900 dark:text-slate-100 text-xs">Direct Owner Endpoint</p></div>
+                </button>
+                <button onclick="selectRole('Broker')" class="flex items-center gap-3 border dark:border-slate-800 p-3 rounded-xl w-full text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                    <div class="w-9 h-9 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg flex items-center justify-center text-lg"><i class="ph-fill ph-user-gear"></i></div>
+                    <div><p class="font-extrabold text-slate-900 dark:text-slate-100 text-xs">Verified Agent / Broker Node</p></div>
+                </button>
+                <button onclick="selectRole('Builder')" class="flex items-center gap-3 border dark:border-slate-800 p-3 rounded-xl w-full text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                    <div class="w-9 h-9 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg flex items-center justify-center text-lg"><i class="ph-fill ph-buildings"></i></div>
+                    <div><p class="font-extrabold text-slate-900 dark:text-slate-100 text-xs">Builder Infrastructure</p></div>
+                </button>
+            </div>
+            
+            <div id="authSpecialOnboardingFormBlock" class="hidden space-y-2.5 border-t dark:border-slate-800 pt-2.5">
+                <div>
+                    <label id="specialLabelNodeInput" class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Firm/Business Name</label>
+                    <input type="text" id="authOnboardingFirmName" placeholder="e.g. Verma Designs" class="w-full bg-slate-50 dark:bg-slate-800 p-2.5 border dark:border-slate-700 rounded-lg font-bold text-xs text-slate-900 dark:text-slate-100 outline-none mt-1">
+                </div>
+            </div>
+
+            <div id="authStep2" class="hidden space-y-3 relative">
+                <button onclick="closeFeature('loginModal')" class="absolute -top-1 -right-1 text-slate-400 hover:text-red-500 font-bold text-xl w-7 h-7 flex items-center justify-center bg-slate-105 dark:bg-slate-800 rounded-full z-50 transition-colors">&times;</button>
+                <div class="text-center">
+                    <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mobile OTP Setup</h3>
+                </div>
+                <div>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Mobile Number</label>
+                    <div class="flex mt-1 bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 rounded-lg overflow-hidden items-center px-2">
+                        <span class="text-xs font-bold text-slate-400">+91</span>
+                        <input type="tel" id="authPhoneInput" placeholder="Enter 10 Digit Number" class="w-full bg-transparent p-2.5 outline-none font-bold text-xs text-slate-900 dark:text-slate-100">
+                    </div>
+                </div>
+                <div id="recaptcha-container" class="mt-2"></div>
+                <div id="otpInputContainerNode" class="hidden animate-slide-up">
+                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Verification Token (OTP)</label>
+                    <input type="text" id="authOtpInput" placeholder="Enter 6-Digit OTP" class="w-full bg-slate-50 dark:bg-slate-800 p-2.5 border dark:border-slate-700 rounded-lg font-bold text-xs text-slate-900 dark:text-slate-100 outline-none mt-1 text-center tracking-widest text-base">
+                </div>
+                <button id="authPrimaryActionSubmitBtn" onclick="triggerOtpRequestSequence()" class="w-full bg-slate-900 dark:bg-slate-800 text-white p-3 rounded-lg font-bold text-xs uppercase tracking-wider">Request OTP</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Post Property -->
+    <div id="postProperty" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[10000] hidden items-center justify-end">
+        <div class="w-full max-w-md bg-white dark:bg-[#131e3a] text-slate-900 dark:text-slate-100 h-screen overflow-y-auto shadow-2xl flex flex-col animate-slide-up transition-colors duration-200">
+            <div class="flex justify-between items-center px-4 py-3.5 border-b dark:border-slate-800 bg-slate-50 dark:bg-slate-950 shrink-0">
+                <div class="space-y-1">
+                    <h2 class="text-[10px] font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">Publish Property Setup</h2>
+                    <div class="flex gap-1 items-center">
+                        <div id="postStepIndicator1" class="w-3.5 h-1 bg-brand-gold rounded-full"></div>
+                        <div id="postStepIndicator2" class="w-3.5 h-1 bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+                        <div id="postStepIndicator3" class="w-3.5 h-1 bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+                    </div>
+                </div>
+                <button onclick="closeFeature('postProperty')" class="w-8 h-8 bg-slate-200/60 dark:bg-slate-800 rounded-full flex items-center justify-center text-lg text-slate-700 dark:text-slate-300">&times;</button>
+            </div>
+            
+            <div class="p-4 sm:p-6 flex-1 space-y-4 animate-slide-up">
+                <!-- STEP 1 -->
+                <div id="step-v1" class="step-div space-y-4">
+                    <div class="bg-[#0b1329] text-white p-4 rounded-xl space-y-2">
+                        <h3 class="text-xs font-bold text-brand-gold uppercase tracking-tight">List Your Property Free</h3>
+                        <p class="text-[10px] text-slate-300">Advertise on India's premier zero-brokerage direct network.</p>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Intent Segment</label>
+                        <div class="grid grid-cols-2 gap-2 mt-1">
+                            <label>
+                                <input type="radio" name="form_cat" value="Buy" class="hidden" checked>
+                                <div class="seg-btn">Sell Property</div>
+                            </label>
+                            <label>
+                                <input type="radio" name="form_cat" value="Rent" class="hidden">
+                                <div class="seg-btn">Rent Out / PG</div>
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Structural Type</label>
+                        <div class="grid grid-cols-4 gap-1.5 mt-1">
+                            <label>
+                                <input type="radio" name="form_type" value="Flat" class="hidden" checked onchange="adjustPostSpecsVisibility()">
+                                <div class="seg-btn">Flat</div>
+                            </label>
+                            <label>
+                                <input type="radio" name="form_type" value="House" class="hidden" onchange="adjustPostSpecsVisibility()">
+                                <div class="seg-btn">House</div>
+                            </label>
+                            <label>
+                                <input type="radio" name="form_type" value="Plot" class="hidden" onchange="adjustPostSpecsVisibility()">
+                                <div class="seg-btn">Plot</div>
+                            </label>
+                            <label>
+                                <input type="radio" name="form_type" value="Commercial" class="hidden" onchange="adjustPostSpecsVisibility()">
+                                <div class="seg-btn">Shop</div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="pt-2">
+                        <button type="button" onclick="moveStep(2)" class="w-full bg-[#0b1329] dark:bg-slate-800 text-white py-3 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5">Next <i class="ph ph-arrow-right"></i></button>
+                    </div>
+                </div>
+
+                <!-- STEP 2 -->
+                <div id="step-v2" class="step-div hidden space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 tracking-wider">State Region</label>
+                            <select id="stateInp" onchange="loadCompleteCities()" class="mt-1"></select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 tracking-wider">District Area</label>
+                            <select id="cityInp" class="mt-1">
+                                <option value="">-- Choose --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 tracking-wider">Address / Locality</label>
+                        <input type="text" id="localityInp" placeholder="Enter colony layout details" class="mt-1">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div id="bhkSpecContainer">
+                            <label class="text-[10px] font-bold text-slate-400 tracking-wider">BHK Configuration</label>
+                            <select id="formBhkInp" class="mt-1">
+                                <option value="1 BHK">1 BHK</option>
+                                <option value="2 BHK">2 BHK</option>
+                                <option value="3 BHK" selected>3 BHK</option>
+                                <option value="4+ BHK">4+ BHK</option>
+                            </select>
+                        </div>
+                        <div id="areaSpecContainer">
+                            <label id="areaLabelNode" class="text-[10px] font-bold text-slate-400 tracking-wider">Built-up Area (Sq.Ft.)</label>
+                            <input type="number" id="formAreaInp" placeholder="e.g. 1200" class="mt-1">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 pt-2">
+                        <button type="button" onclick="moveStep(1)" class="bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 py-3 rounded-lg font-bold text-xs hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">Back</button>
+                        <button type="button" onclick="moveStep(3)" class="w-full bg-[#0b1329] dark:bg-slate-800 text-white py-3 rounded-lg font-bold text-xs">Next</button>
+                    </div>
+                </div>
+
+                <!-- STEP 3 -->
+                <div id="step-v3" class="step-div hidden space-y-4">
+                    <div class="bg-slate-50 dark:bg-[#0b1329] border dark:border-slate-800 p-3 rounded-xl border-dashed space-y-2">
+                        <label class="text-[11px] font-bold uppercase text-slate-700 dark:text-slate-300 flex items-center gap-1"><i class="ph ph-image text-brand-gold"></i> Property Photos</label>
+                        <input type="file" id="realImageInputNode" accept="image/*" class="text-xs file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:bg-slate-200 file:text-slate-700 dark:file:bg-slate-800 dark:file:text-slate-200" multiple onchange="handlePhotoSelection(event)">
+                        <div id="imagePreviewContainer" class="flex flex-wrap gap-1.5 pt-1"></div>
+                    </div>
+
+                    <div class="bg-slate-50 dark:bg-[#0b1329] border dark:border-slate-800 p-3 rounded-xl border-dashed space-y-2">
+                        <label class="text-[11px] font-bold uppercase text-slate-700 dark:text-slate-300 flex items-center gap-1"><i class="ph ph-video-camera text-brand-gold"></i> Video (Short Reel)</label>
+                        <input type="file" id="realVideoInputNode" accept="video/*" class="text-xs file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:bg-slate-200 file:text-slate-700 dark:file:bg-slate-800 dark:file:text-slate-200" onchange="handleVideoSelection(event)">
+                        <div id="videoPreviewContainer" class="hidden pt-1">
+                            <video id="formVideoPreview" class="w-full h-32 object-cover rounded-lg border bg-black" controls></video>
+                            <button type="button" onclick="removeSelectedVideo()" class="mt-1 text-[10px] font-bold text-red-500 uppercase flex items-center gap-0.5"><i class="ph ph-trash"></i> Delete Video</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Target Price (INR)</label>
+                        <input type="number" id="propPrice" placeholder="Enter valuation" class="bg-slate-50 dark:bg-slate-800 p-2.5 border dark:border-slate-700 rounded-lg text-xs font-semibold w-full outline-none mt-1 text-slate-900 dark:text-slate-100">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 pt-2">
+                        <button type="button" onclick="moveStep(2)" class="bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 py-3 rounded-lg font-bold text-xs hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">Back</button>
+                        <button type="button" onclick="publishFinal()" class="bg-brand-gold text-slate-950 py-3 rounded-lg font-extrabold text-[10px] uppercase tracking-widest shadow-sm">Publish Ad</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIP Services / Visit Scheduler Modal -->
+    <div id="assistedSellingModal" class="fixed inset-0 bg-[#050b18]/80 backdrop-blur-sm z-[250000] hidden items-center justify-center p-4">
+        <div class="bg-white dark:bg-[#131e3a] text-slate-900 dark:text-slate-100 w-full max-w-sm rounded-2xl p-5 space-y-3.5 border dark:border-slate-800 shadow-2xl relative animate-slide-up transition-colors">
+            <button onclick="closeFeature('assistedSellingModal')" class="absolute top-3 right-3 text-slate-400 hover:text-red-500 font-bold text-lg">&times;</button>
+            <div class="text-center pb-1 border-b dark:border-slate-800">
+                <span class="font-bold text-xs uppercase text-slate-900 dark:text-slate-200">Schedule Callback</span>
+            </div>
+            <div class="space-y-2.5">
+                <p class="text-[11px] text-slate-500 dark:text-slate-305 leading-relaxed">Provide details to fix an assisted visit schedule.</p>
+                <div>
+                    <label class="text-[9px] font-bold text-slate-400 tracking-wider">Your Name</label>
+                    <input type="text" id="vipCallbackName" placeholder="Enter your name" class="w-full bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 p-2.5 rounded-lg font-semibold text-xs text-slate-900 dark:text-slate-100 outline-none mt-0.5">
+                </div>
+                <div>
+                    <label class="text-[9px] font-bold text-slate-400 tracking-wider">Phone Connection</label>
+                    <input type="tel" id="vipCallbackPhone" placeholder="Enter 10 Digit Number" class="w-full bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 p-2.5 rounded-lg font-semibold text-xs text-slate-900 dark:text-slate-100 outline-none mt-0.5">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase">Date</label>
+                        <input type="date" id="visitPreferredDate" class="w-full bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 p-2 rounded-lg font-semibold text-[10px] text-slate-900 dark:text-slate-100 outline-none mt-0.5">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase">Time</label>
+                        <input type="time" id="visitPreferredTime" class="w-full bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 p-2 rounded-lg font-semibold text-[10px] text-slate-900 dark:text-slate-100 outline-none mt-0.5">
+                    </div>
+                </div>
+                <button onclick="submitVipCallbackRequest()" class="w-full bg-slate-900 dark:bg-slate-800 text-white p-3 rounded-lg font-bold text-xs uppercase tracking-wider mt-1.5">Book Site Visit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- vipServicesInfoModal -->
+    <div id="vipServicesInfoModal" class="fixed inset-0 bg-[#050b18]/80 backdrop-blur-sm z-[600000] hidden items-center justify-center p-4">
+        <div class="bg-white dark:bg-[#131e3a] text-slate-900 dark:text-slate-100 w-full max-w-sm rounded-2xl p-5 space-y-4 border dark:border-slate-800 relative max-h-[85vh] overflow-y-auto no-scrollbar transition-colors">
+            <button onclick="closeFeature('vipServicesInfoModal')" class="absolute top-3 right-3 text-xl text-slate-400 hover:text-red-500 font-bold">&times;</button>
+            <div class="w-12 h-12 bg-slate-900 dark:bg-slate-850 text-white rounded-xl flex items-center justify-center text-2xl mx-auto shadow-sm border border-brand-gold">
+                <i class="ph-fill ph-handshake text-brand-gold animate-pulse"></i>
+            </div>
+            <div class="text-center space-y-1.5">
+                <span class="bg-amber-100 dark:bg-amber-900/60 text-amber-950 dark:text-amber-300 text-[9px] font-bold uppercase px-3 py-1 rounded-full border border-amber-200 dark:border-amber-900/40">VIP Assisted Selling Service</span>
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-slate-100">Bhopal VIP Assisted Service</h3>
+                <p class="text-[10px] text-red-500 font-extrabold uppercase tracking-wider bg-red-50 dark:bg-red-955/40 py-1 px-2.5 rounded-lg inline-block border border-red-200 dark:border-red-900/30">📍 Available Only in Bhopal</p>
+            </div>
+            
+            <div class="space-y-3 pt-1 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                <div class="flex items-start gap-2">
+                    <i class="ph-fill ph-check-circle text-brand-gold text-base shrink-0 mt-0.5"></i>
+                    <p class="leading-relaxed"><strong class="text-slate-900 dark:text-white">📸 HD Photo & Video Shoot:</strong> Hum aapki property par aakar uski high-quality photos aur professionally shot reels/videos lenge.</p>
+                </div>
+                <div class="flex items-start gap-2">
+                    <i class="ph-fill ph-check-circle text-brand-gold text-base shrink-0 mt-0.5"></i>
+                    <p class="leading-relaxed"><strong class="text-slate-900 dark:text-white">🤝 Site Visit Management:</strong> Customer visits ko humare dedicated relationship managers physically handle aur guide karenge.</p>
+                </div>
+                <div class="flex items-start gap-2">
+                    <i class="ph-fill ph-check-circle text-brand-gold text-base shrink-0 mt-0.5"></i>
+                    <p class="leading-relaxed"><strong class="text-slate-900 dark:text-white">💼 Keval 2% Brokerage:</strong> Complete deal conversion hone par flat 2% brokerage charges apply honge. Koi hidden charges nahi.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 pt-2">
+                <button onclick="closeFeature('vipServicesInfoModal')" class="bg-slate-100 dark:bg-slate-800 font-bold text-xs text-slate-600 dark:text-slate-300 py-2.5 rounded-lg">Close</button>
+                <button onclick="closeFeature('vipServicesInfoModal'); openFeature('assistedSellingModal');" class="bg-brand-gold text-slate-955 font-bold text-xs uppercase rounded-lg py-2.5 shadow-sm">Register Callback</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- platformSubscriptionPlansModal -->
+    <div id="platformSubscriptionPlansModal" class="fixed inset-0 bg-[#050b18]/80 backdrop-blur-sm z-[600000] hidden items-center justify-center p-4">
+        <div class="bg-slate-900 dark:bg-[#0b1329] w-full max-w-xl rounded-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto space-y-4 relative border border-slate-800 text-white no-scrollbar transition-colors">
+            <button onclick="closeFeature('platformSubscriptionPlansModal')" class="absolute top-3.5 right-3.5 text-xl text-slate-400 hover:text-red-500 font-bold">&times;</button>
+            <div class="text-center space-y-1 shrink-0">
+                <span class="bg-slate-800 text-brand-gold text-[9px] font-bold uppercase px-2.5 py-0.5 rounded-full border border-slate-700">Membership</span>
+                <h3 class="text-base font-extrabold text-white">Affordable Premium Plans</h3>
+            </div>
+            <div class="overflow-x-auto border border-slate-800 rounded-xl bg-slate-950/40 font-semibold">
+                <table class="w-full text-left border-collapse text-[10px] sm:text-xs">
+                    <thead>
+                        <tr class="border-b border-slate-800 bg-slate-900/80">
+                            <th class="p-3 font-bold text-slate-400">Plan Features</th>
+                            <th class="p-3 font-bold text-center text-slate-300">₹0</th>
+                            <th class="p-3 font-bold text-center text-brand-gold">₹299</th>
+                            <th class="p-3 font-bold text-center text-amber-400">₹599</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800 font-semibold text-slate-300">
+                        <tr>
+                            <td class="p-3">Owners Contact limit</td>
+                            <td class="p-3 text-center">Max 2</td>
+                            <td class="p-3 text-center text-brand-gold">Max 10</td>
+                            <td class="p-3 text-center text-amber-400">Max 30</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3">Direct Contact Numbers</td>
+                            <td class="p-3 text-center text-red-500">✕</td>
+                            <td class="p-3 text-center text-emerald-400">✓</td>
+                            <td class="p-3 text-center text-emerald-400">✓</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3"></td>
+                            <td class="p-3 text-center"><button onclick="selectPremiumPlan('Free', 0)" class="bg-slate-800 text-white font-bold text-[8px] uppercase px-2 py-1.5 rounded">Free</button></td>
+                            <td class="p-3 text-center"><button onclick="selectPremiumPlan('Silver Plan', 299)" class="bg-brand-gold text-slate-955 font-bold text-[12px] uppercase px-2 py-1.5 rounded">Silver</button></td>
+                            <td class="p-3 text-center"><button onclick="selectPremiumPlan('Gold Plan', 599)" class="bg-amber-600 text-white font-bold text-[12px] uppercase px-2 py-1.5 rounded">Gold</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- addB2bModal -->
+    <div id="addB2bModal" class="fixed inset-0 bg-[#050b18]/85 backdrop-blur-sm z-[150000] hidden items-center justify-center p-4">
+        <div class="bg-white dark:bg-[#131e3a] text-slate-900 dark:text-slate-100 w-full max-w-sm rounded-2xl p-5 space-y-3.5 border dark:border-slate-800 shadow-2xl relative animate-slide-up max-h-[85vh] overflow-y-auto no-scrollbar transition-colors">
+            <button onclick="closeFeature('addB2bModal')" class="absolute top-3 right-3 text-slate-500 hover:text-red-500 font-bold text-lg">&times;</button>
+            <div class="text-center pb-1 border-b dark:border-slate-800">
+                <span class="font-bold text-xs uppercase text-slate-900 dark:text-slate-200">Join Directory</span>
+            </div>
+            <div class="space-y-2.5">
+                <div>
+                    <label class="text-[9px] font-bold text-slate-400 tracking-wider uppercase">Business Name</label>
+                    <input type="text" id="b2bFormTitle" placeholder="e.g. Verma Designs" class="w-full bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 p-2.5 rounded-lg font-semibold text-xs text-slate-900 dark:text-slate-100 outline-none">
+                </div>
+                <div>
+                    <label class="text-[9px] font-bold text-slate-400 tracking-wider uppercase">Business Domain</label>
+                    <select id="b2bFormCategory" class="w-full bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 p-2.5 rounded-lg font-bold text-xs text-slate-900 dark:text-slate-100 outline-none">
+                        <option value="Legal">Legal Expert</option>
+                        <option value="Interior">Interior Designer</option>
+                        <option value="Construction">Civil Contractor</option>
+                        <option value="Suppliers">Materials Supplier</option>
+                        <option value="Movers">Movers & Packers</option>
+                        <option value="Vaastu">Vaastu Expert</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[9px] font-bold text-slate-400 tracking-wider uppercase">Specialty / Details</label>
+                    <input type="text" id="b2bFormSpecialty" placeholder="e.g. Modular Kitchens" class="w-full bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 p-2.5 rounded-lg font-semibold text-xs text-slate-900 dark:text-slate-100 outline-none">
+                </div>
+                <div>
+                    <label class="text-[9px] font-bold text-slate-400 tracking-wider uppercase">Phone Connection</label>
+                    <input type="tel" id="b2bFormPhone" placeholder="Enter 10 Digit Number" class="w-full bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 p-2.5 rounded-lg font-semibold text-xs text-slate-900 dark:text-slate-100 outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase">State</label>
+                        <select id="b2bFormState" onchange="loadB2bFormCities()" class="w-full bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 p-2 rounded-lg font-bold text-xs text-slate-900 dark:text-slate-100 outline-none"></select>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase">District</label>
+                        <select id="b2bFormCity" class="w-full bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 p-2 rounded-lg font-bold text-xs text-slate-900 dark:text-slate-100 outline-none">
+                            <option value="">Select State</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="submitNewB2bDirectoryProvider()" class="w-full bg-slate-900 dark:bg-slate-800 text-white p-3 rounded-lg font-bold text-xs uppercase tracking-wider mt-1.5">Publish Entry</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- shareToolkitModal -->
+    <div id="shareToolkitModal" class="fixed inset-0 bg-[#050b18]/80 backdrop-blur-sm z-[250000] hidden items-center justify-center p-4">
+        <div class="bg-white dark:bg-[#131e3a] text-slate-900 dark:text-slate-100 w-full max-w-xs rounded-2xl p-5 space-y-4 border dark:border-slate-800 shadow-2xl relative animate-slide-up text-center transition-colors">
+            <button onclick="closeFeature('shareToolkitModal')" class="absolute top-3 right-3 text-slate-400 hover:text-red-500 font-bold text-lg">&times;</button>
+            <h3 class="font-extrabold text-sm uppercase text-slate-900 dark:text-slate-200 tracking-tight">Share Property</h3>
+            <p class="text-[10px] text-slate-400">Choose your preferred sharing channel.</p>
+            <div class="grid grid-cols-2 gap-2.5 pt-1">
+                <button id="shareWAActionChannelNode" class="bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-xl flex flex-col items-center gap-1.5 font-bold text-xs shadow-md transition-all active:scale-95">
+                    <i class="ph-fill ph-whatsapp text-2xl text-white"></i> WhatsApp
+                </button>
+                <button id="shareCopyLinkActionChannelNode" class="bg-slate-800 hover:bg-slate-900 text-white p-3 rounded-xl flex flex-col items-center gap-1.5 font-bold text-xs shadow-md transition-all active:scale-95">
+                    <i class="ph ph-link text-2xl text-white"></i> Copy Link
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- olxChatDialogModal -->
+    <div id="olxChatDialogModal" class="fixed inset-0 bg-[#050b18]/80 backdrop-blur-sm z-[250000] hidden items-center justify-center p-4">
+        <div class="bg-slate-50 dark:bg-[#0b1329] w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[80vh] relative animate-slide-up border dark:border-slate-800 transition-colors">
+            <div class="bg-white dark:bg-[#131e3a] p-3 border-b dark:border-slate-800 flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-2">
+                    <div id="chatSellerAvatar" class="w-7 h-7 rounded-full bg-[#0b1329] dark:bg-slate-800 text-brand-gold flex items-center justify-center font-bold text-xs">S</div>
+                    <div>
+                        <h4 id="chatSellerName" class="font-bold text-[10px] sm:text-xs text-slate-900 dark:text-slate-200 uppercase">Seller</h4>
+                        <p class="text-[8px] text-emerald-600 dark:text-emerald-400 font-bold uppercase flex items-center gap-0.5"><span class="w-1 h-1 bg-emerald-500 rounded-full inline-block animate-ping"></span> Online</p>
+                    </div>
+                </div>
+                <button onclick="closeFeature('olxChatDialogModal')" class="text-slate-400 hover:text-red-500 font-bold text-lg">&times;</button>
+            </div>
+            <div id="olxChatMessageFlow" class="flex-1 overflow-y-auto p-3 space-y-2.5 max-h-[40vh] min-h-[250px]"></div>
+            <div id="olxChatTypingIndicator" class="hidden px-3 py-1 text-[8px] text-slate-400 font-semibold animate-pulse shrink-0">Seller is typing...</div>
+            <div class="p-2 bg-white dark:bg-[#131e3a] border-t dark:border-slate-800 flex gap-1.5 shrink-0">
+                <input type="text" id="olxChatMessageInput" onkeydown="if(event.key === 'Enter') sendUserChatMessageSimulation();" placeholder="Write query here..." class="flex-1 bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 px-3 py-2 rounded-lg text-xs font-semibold outline-none text-slate-900 dark:text-slate-100">
+                <button onclick="sendUserChatMessageSimulation()" class="bg-[#0b1329] dark:bg-slate-800 text-white px-3.5 rounded-lg text-xs font-bold uppercase flex items-center justify-center"><i class="ph-fill ph-paper-plane-right"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- propertyDetailsModal -->
+    <div id="propertyDetailsModal" class="fixed inset-0 bg-slate-955/85 backdrop-blur-sm z-[150000] hidden items-center justify-center p-4">
+        <div class="bg-white dark:bg-[#0b1329] text-slate-900 dark:text-slate-100 w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh] relative animate-slide-up transition-colors duration-200">
+            <button onclick="closePropertyDetailModalBlock()" class="absolute top-3 right-3 z-[160000] bg-white/80 dark:bg-slate-800/80 backdrop-blur text-slate-900 dark:text-slate-100 hover:text-red-500 font-bold text-lg w-8 h-8 rounded-full flex items-center justify-center shadow-md border dark:border-slate-700">&times;</button>
+            
+            <div class="overflow-y-auto p-4 space-y-4 flex-1 relative">
+                <div class="relative bg-slate-900 rounded-xl overflow-hidden group">
+                    <div id="detailMediaTabsBar" class="absolute top-3 left-3 z-40 bg-black/50 backdrop-blur-md p-0.5 rounded-lg flex gap-0.5">
+                        <button id="mediaTabPhotos" onclick="switchDetailMediaMode('photos')" class="px-2.5 py-1 rounded text-[9px] font-bold uppercase tracking-wider text-slate-955 bg-brand-gold transition-all flex items-center gap-0.5"><i class="ph ph-image"></i> Photos</button>
+                        <button id="mediaTabVideo" onclick="switchDetailMediaMode('video')" class="px-2.5 py-1 rounded text-[9px] font-bold uppercase tracking-wider text-white hover:text-brand-gold transition-all flex items-center gap-0.5"><i class="ph-play-circle ph"></i> Video</button>
+                    </div>
+                    <div id="detailPhotosContainer" class="relative h-56 sm:h-80 flex items-center justify-center">
+                        <img id="detailModalImage" src="" alt="Property Visual" class="w-full h-full object-cover">
+                        <div id="detailModalNavGroup" class="absolute inset-x-3 flex justify-between items-center z-30 pointer-events-none">
+                            <button onclick="changeDetailPhoto(-1)" class="pointer-events-auto w-8 h-8 bg-black/60 rounded-full flex items-center justify-center text-white hover:bg-black/80 transition-all"><i class="ph-bold ph-caret-left text-base"></i></button>
+                            <button onclick="changeDetailPhoto(1)" class="pointer-events-auto w-8 h-8 bg-black/60 rounded-full flex items-center justify-center text-white hover:bg-black/80 transition-all"><i class="ph-bold ph-caret-right text-base"></i></button>
+                        </div>
+                        <div id="detailPhotoDotsTray" class="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex gap-1 z-30"></div>
+                        <span id="detailPhotoCounterBadge" class="absolute bottom-2.5 right-3 bg-black/60 px-2 py-0.5 rounded text-[8px] text-white font-bold">1/1</span>
+                    </div>
+                    <div id="detailVideoContainer" class="hidden relative h-56 sm:h-80 bg-black flex items-center justify-center">
+                        <video id="detailModalVideo" class="w-full h-full object-contain" controls preload="metadata"></video>
+                    </div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none z-10"></div>
+                    <div class="absolute bottom-3 left-3 right-3 flex justify-between items-center text-white z-20">
+                        <span id="detailModalBadge" class="bg-slate-900 border border-slate-800 text-brand-gold font-bold text-[9px] uppercase px-2 py-0.5 rounded">Buy</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between gap-2 border-b dark:border-slate-800 pb-2.5 shrink-0">
+                    <div class="flex items-center gap-1.5">
+                        <button id="detailModalSaveBtn" onclick="toggleDetailBookmarkState()" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 px-3 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all">
+                            <i id="detailSaveIcon" class="ph ph-bookmark text-sm"></i> <span id="detailSaveText">Save</span>
+                        </button>
+                        <button onclick="triggerScamReportAction()" class="bg-red-50 dark:bg-red-955/25 hover:bg-red-100 text-red-600 dark:text-red-400 px-3 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all border border-red-100 dark:border-red-900/30">
+                            <i class="ph ph-warning-octagon text-sm"></i> Report
+                        </button>
+                    </div>
+                    <button onclick="openShareToolkitChannelFromDetail()" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-900 dark:text-slate-100 px-3 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all">
+                        <i class="ph ph-share-network text-sm"></i> Share
+                    </button>
+                </div>
+
+                <div class="space-y-1">
+                    <div class="flex justify-between items-start gap-4">
+                        <h3 id="detailModalTitle" class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-slate-100 uppercase tracking-tight">3 BHK Apartment</h3>
+                        <p id="detailModalPrice" class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">₹45,000,000</p>
+                    </div>
+                    <p id="detailModalLocation" class="text-[10px] text-slate-605 dark:text-slate-300 font-semibold flex items-center gap-0.5"><i class="ph-fill ph-map-pin text-brand-gold"></i> Ayodhya Bypass, Bhopal, Madhya Pradesh</p>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center" id="detailModalSpecsGrid">
+                    <div class="bg-slate-100 dark:bg-[#131e3a] p-2.5 rounded-xl border dark:border-[#1e2d54]" id="detailSpecBhkBox">
+                        <p class="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase">Config</p>
+                        <p id="detailSpecBhk" class="text-[11px] font-extrabold text-slate-900 dark:text-slate-100 mt-0.5">3 BHK</p>
+                    </div>
+                    <div class="bg-slate-100 dark:bg-[#131e3a] p-2.5 rounded-xl border dark:border-[#1e2d54]">
+                        <p class="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase">Area</p>
+                        <p id="detailSpecArea" class="text-[11px] font-extrabold text-slate-900 dark:text-slate-100 mt-0.5">1450 Sq.Ft</p>
+                    </div>
+                    <div class="bg-slate-100 dark:bg-[#131e3a] p-2.5 rounded-xl border dark:border-[#1e2d54]" id="detailSpecBathsBox">
+                        <p class="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase">Baths</p>
+                        <p id="detailSpecBaths" class="text-[11px] font-extrabold text-slate-900 dark:text-slate-100 mt-0.5">3</p>
+                    </div>
+                    <div class="bg-slate-100 dark:bg-[#131e3a] p-2.5 rounded-xl border dark:border-[#1e2d54]" id="detailSpecFurnishBox">
+                        <p class="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase">Furnish</p>
+                        <p id="detailSpecFurnish" class="text-[11px] font-extrabold text-slate-900 dark:text-slate-100 mt-0.5">Semi-Furnished</p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-100 dark:bg-[#131e3a] p-3 rounded-xl border dark:border-[#1e2d54] space-y-1.5 text-xs font-semibold text-slate-900 dark:text-slate-100">
+                    <p class="text-[9px] font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">Advanced Specs</p>
+                    <div class="grid grid-cols-3 gap-1.5 border-b dark:border-[#1e2d54] pb-1.5 mb-1.5 text-center text-[10px]" id="detailModalAdvancedRow">
+                        <div class="border-r dark:border-[#1e2d54]">
+                            <p class="text-slate-505 dark:text-slate-400 text-[8px] uppercase font-bold">Facing</p>
+                            <span id="detailSpecFacing" class="font-extrabold text-slate-900 dark:text-slate-100 text-[11px]">-</span>
+                        </div>
+                        <div class="border-r dark:border-[#1e2d54]" id="detailSpecFloorBox">
+                            <p class="text-slate-550 dark:text-slate-400 text-[8px] uppercase font-bold">Floor</p>
+                            <span id="detailSpecFloor" class="font-extrabold text-slate-900 dark:text-slate-100 text-[11px]">-</span>
+                        </div>
+                        <div id="detailSpecAgeBox">
+                            <p class="text-slate-500 dark:text-slate-400 text-[8px] uppercase font-bold">Age</p>
+                            <span id="detailSpecAge" class="font-extrabold text-slate-900 dark:text-slate-100 text-[11px]">-</span>
+                        </div>
+                    </div>
+                    <p id="detailDescriptionText" class="text-[10px] leading-relaxed text-slate-700 dark:text-slate-300">No description provided.</p>
+                </div>
+
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-2.5 bg-slate-950 dark:bg-slate-900 text-white p-3 rounded-xl border dark:border-slate-800">
+                    <div class="space-y-0.5 w-full sm:w-auto text-center sm:text-left">
+                        <p id="detailSellerFirm" class="text-[10px] font-bold uppercase text-brand-gold">Direct Owner Node</p>
+                        <p class="text-[8px] text-slate-400 uppercase tracking-widest">Connect direct, avoid extra fees</p>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5 w-full sm:w-auto justify-end">
+                        <button onclick="openOlxChatSimulation()" class="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold uppercase px-3.5 py-2.5 rounded-lg flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"><i class="ph-fill ph-chats-teardrop"></i> Chat</button>
+                        <button onclick="handleLockedPhoneAction()" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-950 border border-slate-700 dark:border-transparent text-[10px] font-extrabold uppercase px-3.5 py-2.5 rounded-lg flex items-center justify-center gap-1.5 shadow-md transition-all active:scale-95"><i class="ph-fill ph-phone text-brand-gold"></i> Call</button>
+                        <button onclick="openVisitingSchedulerModal()" class="flex-1 sm:flex-none bg-brand-gold hover:bg-brand-gold-hover text-slate-955 text-[10px] font-extrabold uppercase px-3.5 py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-md"><i class="ph-bold ph-calendar-blank"></i> Visit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
